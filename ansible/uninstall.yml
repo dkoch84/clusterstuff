@@ -1,0 +1,9 @@
+ - name: uninstall kubectl
+   hosts: worker
+   tasks:
+    - name: kubectl uninstall
+      pacman:
+        name:
+          - kubectl-bin
+        state: absent
+        update_cache: no

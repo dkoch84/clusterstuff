@@ -1,0 +1,10 @@
+ - name: cluster prep 1
+   hosts: admin:worker
+   become: true
+   tasks: 
+    - name: containerd install
+      pacman:
+        name:
+          - containerd
+        state: present
+        update_cache: yes

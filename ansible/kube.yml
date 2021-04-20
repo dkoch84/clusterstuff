@@ -1,0 +1,19 @@
+ - name: cluster prep 2
+   hosts: admin:worker
+   tasks: 
+    - name: kubeadmin, kubelet install
+      yay:
+        name:
+          - kubeadm-bin
+          - kubelet-bin
+        state: present
+        update_cache: no
+ - name: cluster prep 3
+   hosts: admin
+   tasks:
+    - name: kubectl install
+      yay:
+        name:
+          - kubectl-bin
+        state: present
+        update_cache: no
