@@ -1,0 +1,134 @@
+
+- name: Iptables removal
+  hosts: admin:worker
+  become: true
+  tasks: 
+  - name: iptables removal before replacement
+    pacman:
+      name:
+        - iptables
+      state: absent
+      force: true
+- name: Rolling Distro Bro
+  hosts: admin worker
+  gather_facts: no
+  become: yes
+  tasks:
+  - name: full system upgrade
+    pacman:
+      update_cache: yes
+      upgrade: yes
+- name: Kube Time
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks: 
+  - name: kubestuff install
+    pacman:
+      name:
+        - cri-o
+        - crictl
+        - iptables-nft
+        - ethtool
+        - socat
+        - kubeadm
+        - kubelet
+        - cni-plugins
+      state: latest
+      update_cache: no
+- name: Kubectl install
+  hosts: admin
+  gather_facts: no
+  become: true
+  tasks:
+  - name: kubectl install
+    pacman:
+      name:
+        - kubectl
+      state: latest
+      update_cache: no
+- name: Create crio.conf.d
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks: 
+  - name: create directory
+    file:
+      path: /etc/crio/crio.conf.d
+      state: directory
+      mode: '0755'
+- name: Create CRI-O fix with Cilium
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks:
+  - name: Creating a file with content
+    copy:
+      dest: "/etc/crio/crio.conf.d/00-plugin-dir.conf"
+      content: |
+        [crio.network]
+        plugin_dirs = [
+          "/opt/cni/bin/",
+        ]
+- name: Cri-o and Kube Enabler
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks: 
+  - name: cri-o start and enable
+    systemd:
+      enabled: yes
+      state: started
+      name: crio
+  - name: kubelet enable
+    systemd:
+      enabled: yes
+      name: kubelet
+- name: Swap Masker
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks: 
+  - name: mask dev-zram0.swap
+    systemd:
+      enabled: false
+      masked: true
+      name: dev-zram0.swap
+  - name: mask zswap-arm.service
+    systemd:
+      enabled: false
+      masked: true
+      name: zswap-arm.service
+- name: Create resolve.conf.d
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks: 
+  - name: create directory
+    file:
+      path: /etc/systemd/resolved.conf.d
+      state: directory
+      mode: '0755'
+- name: Create dns_servers.conf
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks:
+  - name: Creating a file with content
+    copy:
+      dest: "/etc/systemd/resolved.conf.d/dns_servers.conf"
+      content: |
+        [Resolve]
+        DNS=192.168.1.1 ::1
+        Domains=~.
+- name: Create fallback_dns.conf
+  hosts: admin:worker
+  gather_facts: no
+  become: true
+  tasks:
+  - name: Creating a file with content
+    copy:
+      dest: "/etc/systemd/resolved.conf.d/fallback_dns.conf"
+      content: |
+        [Resolve]
+        FallbackDNS=

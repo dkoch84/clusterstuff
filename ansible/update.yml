@@ -1,0 +1,10 @@
+---
+- name: Cluster up-to-date
+  hosts: admin worker
+  become: yes
+  
+  tasks:
+    - name: full system upgrade
+      pacman:
+        update_cache: yes
+        upgrade: yes

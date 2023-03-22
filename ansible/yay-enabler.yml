@@ -2,11 +2,11 @@
    hosts: admin:worker
    become: yes
    tasks: 
-    - user: name=alarm
+    - user: name=archie
 
     - lineinfile:
-        path: /etc/sudoers.d/alarm-allow-to-sudo-pacman
+        path: /etc/sudoers.d/archie-allow-to-sudo-pacman
         state: present
-        line: "alarm ALL=(ALL) NOPASSWD: /usr/bin/pacman"
+        line: "archie ALL=(ALL) NOPASSWD: /usr/bin/pacman"
         validate: /usr/sbin/visudo -cf %s
         create: yes

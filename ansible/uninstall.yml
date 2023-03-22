@@ -1,9 +1,15 @@
- - name: uninstall kubectl
-   hosts: worker
-   tasks:
-    - name: kubectl uninstall
+ - name: cluster prep 1
+   hosts: admin:worker
+   become: true
+   tasks: 
+    - name: containerd remove
       pacman:
         name:
+          - containerd
+          - kubelet-bin
+          - kubeadm-bin
           - kubectl-bin
-        state: absent
+          - fakeroot
+          - devtools
+        state: removed
         update_cache: no

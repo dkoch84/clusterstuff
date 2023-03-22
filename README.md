@@ -1,4 +1,14 @@
+## It's all wildly different for Odroid C4s
+1. Do Manjaro ARM to em
+2. `ansible playbook -i hosts --ask-become-pass kubetime-manjaro-arm`
+
+idk about Rock64s, that's a tomorrow problem. CRI-O cuz containerd sucks on these boards, this distro, something. Edits for making CRI-O play nice with CNIs. 
+
+Runs cilium, btw.
+
+
 ## Provision sdcards
+
 1. `dd if=/dev/zero of=/dev/mmcblk0 bs=1M count=32`
 2. `fdisk /dev/mmcblk0` -> o, p, n, p, 1, 32768, enter, w
 3. `mkfs.ext4 /dev/mmcblk0p1`
@@ -13,37 +23,43 @@
 
 pass: alarm
 
-``` bash
+```bash
 su root
 pacman-key --init
 pacman-key --populate archlinuxarm
 rm /boot/boot.scr
 pacman -Sy uboot-rock64 sudo rxvt-unicode-terminfo python
 ```
+
 Do wheel stuff
+
 ```
 # still as root
 visudo /etc/sudoers
 
 # uncomment this line
-%wheel ALL=(ALL) ALL   
-``` 
-then `usermod -aG wheel alarm`. You should be able to use sudo now as 'alarm' user.      
+%wheel ALL=(ALL) ALL
+```
+
+then `usermod -aG wheel alarm`. You should be able to use sudo now as 'alarm' user.
 
 Set a sane hostname
 `sudo echo 'kubelet-01' > /etc/hostname`
 
 Make MAC addresses unique
+
 ```bash
 vi /etc/systemd/network/00-default.link
 ```
+
 Match the default MAC showing up on the network, supply a "unique" one instead.
+
 ```ini
 [Match]
-MACAddress=da:19:c8:7a:6d:f4 
+MACAddress=da:19:c8:7a:6d:f4
 
 [Link]
-MACAddress=da:19:c8:7a:6d:f5 
+MACAddress=da:19:c8:7a:6d:f5
 NamePolicy=kernel database onboard slot path
 ```
 
@@ -54,6 +70,7 @@ install [yay](https://galaxy.ansible.com/jonsible/yay) on the ansible host
 ```
 ansible-galaxy install jonsible.yay
 ```
+
 `vim ~/.ansible/roles/jonsible.yay/tasks/main.yml`
 
 ```
@@ -62,10 +79,11 @@ state: present
 ```
 
 Configure ansible hosts
+
 ```
 # /etc/ansible/hosts
 
-[control]                                
+[control]
 localhost ansible_connection=local
 
 [admin]

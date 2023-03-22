@@ -1,0 +1,14 @@
+[control]
+localhost ansible_connection=local
+
+[admin]
+192.168.1.12 ansible_user=archie
+
+[worker]
+192.168.1.[13:15] ansible_user=archie
+
+[admin:vars]
+ansible_python_interpreter=/usr/bin/python3.10
+
+[worker:vars]
+ansible_python_interpreter=/usr/bin/python3.10
