@@ -35,10 +35,7 @@ Do wheel stuff
 
 ```
 # still as root
-visudo /etc/sudoers
-
-# uncomment this line
-%wheel ALL=(ALL) ALL
+sed 's/# %wheel  ALL=(ALL) ALL/%wheel  ALL=(ALL) ALL/' /etc/sudoers
 ```
 
 then `usermod -aG wheel alarm`. You should be able to use sudo now as 'alarm' user.
