@@ -1,0 +1,6 @@
+- name: shutdown
+  hosts: admin:worker
+  become: true
+  tasks:
+  - name: shutdown
+    community.general.shutdown:

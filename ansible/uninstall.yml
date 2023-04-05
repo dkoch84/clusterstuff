@@ -1,4 +1,4 @@
- - name: cluster prep 1
+ - name: nukeit
    hosts: admin:worker
    become: true
    tasks: 
