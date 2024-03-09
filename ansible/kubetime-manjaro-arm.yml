@@ -63,7 +63,7 @@
   gather_facts: no
   become: true
   tasks:
-  - name: Creating a file with content
+  - name: Creating a crio cni config
     copy:
       dest: "/etc/crio/crio.conf.d/00-plugin-dir.conf"
       content: |
@@ -115,7 +115,7 @@
   gather_facts: no
   become: true
   tasks:
-  - name: Creating a file with content
+  - name: Creating a dns config
     copy:
       dest: "/etc/systemd/resolved.conf.d/dns_servers.conf"
       content: |
@@ -127,7 +127,7 @@
   gather_facts: no
   become: true
   tasks:
-  - name: Creating a file with content
+  - name: Creating another dns config
     copy:
       dest: "/etc/systemd/resolved.conf.d/fallback_dns.conf"
       content: |
@@ -138,8 +138,180 @@
   gather_facts: no
   become: true
   tasks:
-  - name: Creating a file with content
+  - name: Creating a kernel config
     copy:
       dest: "/boot/cmdline.txt"
       content: |
         root=PARTUUID=d89b0549-02 rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 usbhid.mousepoll=8 audit=0 cgroup_enable=memory cgroup_memory=1
+- name: Create kubelet conf
+  hosts: pi
+  gather_facts: no
+  become: true
+  tasks:
+  - name: Creating a kubelet config
+    copy:
+      dest: "/var/lib/kubelet/config.yml"
+      content: |
+        apiVersion: kubelet.config.k8s.io/v1beta1
+        authentication:
+          anonymous:
+            enabled: false
+          webhook:
+            cacheTTL: 0s
+            enabled: true
+          x509:
+            clientCAFile: /etc/kubernetes/pki/ca.crt
+        authorization:
+          mode: Webhook
+          webhook:
+            cacheAuthorizedTTL: 0s
+            cacheUnauthorizedTTL: 0s
+        cgroupDriver: systemd
+        clusterDNS:
+        - 10.96.0.10
+        clusterDomain: cluster.local
+        containerRuntimeEndpoint: ""
+        cpuManagerReconcilePeriod: 0s
+        evictionPressureTransitionPeriod: 0s
+        fileCheckFrequency: 0s
+        healthzBindAddress: 127.0.0.1
+        healthzPort: 10248
+        httpCheckFrequency: 0s
+        imageMaximumGCAge: 0s
+        imageMinimumGCAge: 0s
+        kind: KubeletConfiguration
+        logging:
+          flushFrequency: 0
+          options:
+            json:
+              infoBufferSize: "0"
+          verbosity: 0
+        memorySwap: {}
+        nodeStatusReportFrequency: 0s
+        nodeStatusUpdateFrequency: 0s
+        resolvConf: /run/systemd/resolve/resolv.conf
+        rotateCertificates: true
+        runtimeRequestTimeout: 0s
+        shutdownGracePeriod: 0s
+        shutdownGracePeriodCriticalPods: 0s
+        staticPodPath: /etc/kubernetes/manifests
+        streamingConnectionIdleTimeout: 0s
+        syncFrequency: 0s
+        volumeStatsAggPeriod: 0s
+        maxPods: 30
+- name: Create kubelet conf
+  hosts: pi
+  gather_facts: no
+  become: true
+  tasks:
+  - name: Creating a kube-controller config
+    copy:
+      dest: "/etc/kubernetes/manifests/kube-controller-manager.yaml"
+      content: |
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          creationTimestamp: null
+          labels:
+            component: kube-controller-manager
+            tier: control-plane
+          name: kube-controller-manager
+          namespace: kube-system
+        spec:
+          containers:
+          - command:
+            - kube-controller-manager
+            - --allocate-node-cidrs=true
+            - --authentication-kubeconfig=/etc/kubernetes/controller-manager.conf
+            - --authorization-kubeconfig=/etc/kubernetes/controller-manager.conf
+            - --bind-address=127.0.0.1
+            - --client-ca-file=/etc/kubernetes/pki/ca.crt
+            - --cluster-cidr=10.0.0.0/22
+            - --node-cidr-mask-size=26
+            - --cluster-name=kubernetes
+            - --cluster-signing-cert-file=/etc/kubernetes/pki/ca.crt
+            - --cluster-signing-key-file=/etc/kubernetes/pki/ca.key
+            - --controllers=*,bootstrapsigner,tokencleaner
+            - --kubeconfig=/etc/kubernetes/controller-manager.conf
+            - --leader-elect=true
+            - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+            - --root-ca-file=/etc/kubernetes/pki/ca.crt
+            - --service-account-private-key-file=/etc/kubernetes/pki/sa.key
+            - --service-cluster-ip-range=10.96.0.0/12
+            - --use-service-account-credentials=true
+            image: registry.k8s.io/kube-controller-manager:v1.29.2
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              failureThreshold: 8
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10257
+                scheme: HTTPS
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 15
+            name: kube-controller-manager
+            resources:
+              requests:
+                cpu: 200m
+            startupProbe:
+              failureThreshold: 24
+              httpGet:
+                host: 127.0.0.1
+                path: /healthz
+                port: 10257
+                scheme: HTTPS
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 15
+            volumeMounts:
+            - mountPath: /etc/ssl/certs
+              name: ca-certs
+              readOnly: true
+            - mountPath: /etc/ca-certificates
+              name: etc-ca-certificates
+              readOnly: true
+            - mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+              name: flexvolume-dir
+            - mountPath: /etc/kubernetes/pki
+              name: k8s-certs
+              readOnly: true
+            - mountPath: /etc/kubernetes/controller-manager.conf
+              name: kubeconfig
+              readOnly: true
+            - mountPath: /usr/share/ca-certificates
+              name: usr-share-ca-certificates
+              readOnly: true
+          hostNetwork: true
+          priority: 2000001000
+          priorityClassName: system-node-critical
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          volumes:
+          - hostPath:
+              path: /etc/ssl/certs
+              type: DirectoryOrCreate
+            name: ca-certs
+          - hostPath:
+              path: /etc/ca-certificates
+              type: DirectoryOrCreate
+            name: etc-ca-certificates
+          - hostPath:
+              path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
+              type: DirectoryOrCreate
+            name: flexvolume-dir
+          - hostPath:
+              path: /etc/kubernetes/pki
+              type: DirectoryOrCreate
+            name: k8s-certs
+          - hostPath:
+              path: /etc/kubernetes/controller-manager.conf
+              type: FileOrCreate
+            name: kubeconfig
+          - hostPath:
+              path: /usr/share/ca-certificates
+              type: DirectoryOrCreate
+            name: usr-share-ca-certificates
+        status: {}
