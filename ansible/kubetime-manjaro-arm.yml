@@ -144,7 +144,7 @@
       content: |
         root=PARTUUID=d89b0549-02 rw rootwait console=serial0,115200 console=tty3 selinux=0 quiet splash plymouth.ignore-serial-consoles smsc95xx.turbo_mode=N dwc_otg.lpm_enable=0 usbhid.mousepoll=8 audit=0 cgroup_enable=memory cgroup_memory=1
 - name: Create kubelet conf
-  hosts: pi
+  hosts: admin:worker
   gather_facts: no
   become: true
   tasks:
@@ -199,8 +199,8 @@
         syncFrequency: 0s
         volumeStatsAggPeriod: 0s
         maxPods: 30
-- name: Create kubelet conf
-  hosts: pi
+- name: Create kube controller config
+  hosts: admin
   gather_facts: no
   become: true
   tasks:
