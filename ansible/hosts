@@ -5,10 +5,13 @@ localhost ansible_connection=local
 192.168.1.12 ansible_user=archie
 
 [worker]
-192.168.1.[13:15] ansible_user=archie
+192.168.1.[13:19] ansible_user=archie
+
+[pi]
+192.168.1.[16:19] ansible_user=archie
 
 [admin:vars]
-ansible_python_interpreter=/usr/bin/python3.10
+ansible_python_interpreter=/usr/bin/python3
 
 [worker:vars]
-ansible_python_interpreter=/usr/bin/python3.10
+ansible_python_interpreter=/usr/bin/python3
