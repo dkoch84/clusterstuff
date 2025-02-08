@@ -1,0 +1,22 @@
+- name: Kubeadm init
+  hosts: admin
+  become: true
+  gather_facts: no
+  tasks: 
+  - name: kubeadm init
+    ansible.builtin.command: "sudo kubeadm init --cri-socket='unix:///run/crio/crio.sock' --pod-network-cidr='10.0.0.0/18'"
+- name: Print Join command
+  hosts: admin
+  become: true
+  gather_facts: no
+  tasks: 
+  - name: kubeadm token
+    ansible.builtin.command: "sudo kubeadm token create --print-join-command"
+    register: JOIN
+- name: Kubeadm join
+  hosts: worker
+  become: true
+  gather_facts: no
+  tasks: 
+  - name: kubeadm init
+    ansible.builtin.command: "sudo {{ JOIN.stdout }}"
